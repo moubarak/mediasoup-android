@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <org.webrtc.SurfaceViewRenderer
+        android:id="@+id/video_renderer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="4dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:orientation="horizontal"
+        >
+
+        <ImageButton
+            android:id="@+id/toggle_mic"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_margin="5dp"
+            android:background="@drawable/toggle_mic_selector"
+            android:onClick="toggleMic" />
+
+        <ImageButton
+            android:id="@+id/switch_camera"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_margin="5dp"
+            android:background="@drawable/switch_camera_selector"
+            android:onClick="switchCamera" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
