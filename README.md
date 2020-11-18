@@ -13,7 +13,7 @@ Before running the server make sure you edit `listenIps` inside `config.js` to u
 Follow these steps before running the server and/or app
 1. Make sure both the server machine and your android device are connected to the same network
 2. Edit `listenIps` inside `config.js` to use the machine's IP address instead of `127.0.0.1`
-3. Edit `API.java` inside the package `com.example.rtcclient.prefs` to match the same IP you set in `config.js` before
+3. Edit `API.java` inside the package `com.example.rtcclient.prefs` to match the same IP you set in `config.js` before (or you can set the server IP inside the app)
 
 After you have setup networking you can run the server, app, and/or javascript client in any order. Javascript clients still run at `localhost:3000`
 
