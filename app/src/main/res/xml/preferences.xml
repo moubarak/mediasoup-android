@@ -6,7 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:key="serverIP"
-        android:title="Server IP Adress"
+        android:title="Server IP Address"
         app:useSimpleSummaryProvider="true" />
 
 </PreferenceScreen>
