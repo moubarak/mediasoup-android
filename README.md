@@ -1,6 +1,6 @@
 # Basic RTC Client
 
-Basic RTC Client is an Android WebRTC client built on-top of [mediasoup-client-android](https://github.com/haiyangwu/mediasoup-client-android)
+Basic RTC Client is an Android WebRTC client built on-top of [mediasoup-client-android](https://github.com/haiyangwu/mediasoup-client-android). The app is designed with minimal UI so it will automatically join and leave the room, find peers, and subscribe/un-subscribe to their tracks.
 
 ## Running
 
