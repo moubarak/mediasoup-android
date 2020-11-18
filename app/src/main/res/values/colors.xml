@@ -4,6 +4,6 @@
     <color name="white">#FFFFFFFF</color>
 
     <!--  Daily.co's color palette -->
-    <color name="primary">#ECA13F</color>
-    <color name="secondary">#72E3B6</color>
+    <color name="secondary">#ECA13F</color>
+    <color name="primary">#72E3B6</color>
 </resources>

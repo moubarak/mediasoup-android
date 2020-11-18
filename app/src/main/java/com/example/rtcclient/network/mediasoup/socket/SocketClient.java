@@ -80,14 +80,21 @@ public class SocketClient extends org.protoojs.droid.Peer implements ISignalingS
         return response;
     }
 
+    //TODO (mohamed): Implement async
     @Override
     public void fetchAsync(String path, JSONObject params) {
-        //TODO (mohamed): Implement async
+
     }
 
     // TODO (mohamed): Consolidate listeners
     @Override
     public void register(JSONObject params, ISignalListener listener) {
+
+    }
+
+    //TODO (mohamed): Implement
+    @Override
+    public void unRegister() {
 
     }
 }

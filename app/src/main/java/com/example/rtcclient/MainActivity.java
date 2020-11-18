@@ -1,14 +1,24 @@
 package com.example.rtcclient;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.rtcclient.network.ISignalingStrategy;
 import com.example.rtcclient.network.http.HttpClient;
+import com.example.rtcclient.prefs.API;
+import com.example.rtcclient.prefs.SettingsActivity;
 import com.nabinbhandari.android.permissions.PermissionHandler;
 import com.nabinbhandari.android.permissions.Permissions;
 
@@ -60,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         // Stop the screen from auto-dimming
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -90,6 +101,40 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         mRoomClient.stopCamera();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.server_ip:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivityForResult(intent, 1);
+                mRoomClient.leaveRoom();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == 1) {
+            Logger.d(TAG, "request config done");
+            runOnUiThread(() -> {
+                mRoomClient.reset();
+                checkPermissions();
+            });
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     /**

@@ -10,6 +10,8 @@ public interface ISignalingStrategy {
 
     void register(JSONObject params, ISignalListener listener);
 
+    void unRegister();
+
     interface ISignalListener {
         void onResponse(JSONObject response);
     }

@@ -1,6 +1,11 @@
 package com.example.rtcclient.prefs;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
+import android.preference.PreferenceManager;
+
+import com.example.rtcclient.Application;
 
 /**
  * URL library
@@ -11,7 +16,6 @@ public class API {
      * Android emulator uses 10.0.2.2 as a host loopback interface
      */
     private static final String loopback = "http://10.0.2.2";
-    private static final String host = /*"http://192.168.8.101";*/ "http://172.16.97.116";
     private static final String port = "3000";
 
     /**
@@ -37,5 +41,9 @@ public class API {
     /**
      * Could use a Builder pattern
      */
-    public static final String api = isEmulator ? (loopback + ":" + port + "/signaling/") : (host + ":" + port + "/signaling/");
+    public String api = isEmulator ? (loopback + ":" + port + "/signaling/") : (getHost() + ":" + port + "/signaling/");
+
+    public static String getHost() {
+        return "http://" + PreferenceManager.getDefaultSharedPreferences(Application.context.getApplicationContext()).getString("serverIP", "192.168.8.101") + ":" + port + "/signaling/";
+    }
 }

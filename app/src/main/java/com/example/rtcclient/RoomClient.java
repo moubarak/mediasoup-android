@@ -54,6 +54,7 @@ public class RoomClient {
     private Map<String, Consumer> mConsumers;
     private Map<String, Consumer> mPeerVideoConsumerMap;
     private Map<String, Consumer> mPeerAudioConsumerMap;
+    private ISignalingStrategy.ISignalListener mListener;
 
     /**
      * Interfaces with mediasoup-client-android
@@ -73,7 +74,7 @@ public class RoomClient {
     /**
      * TODO (mohamed): Move mediasoup-related vars to a separate class
      */
-    private final SendTransport.Listener sendTransportListener = new SendTransport.Listener() {
+    private SendTransport.Listener sendTransportListener = new SendTransport.Listener() {
 
         private final String listenerTAG = TAG + "_SendTrans";
 
@@ -137,7 +138,7 @@ public class RoomClient {
             Logger.d(listenerTAG, "onConnectionStateChange: " + connectionState);
         }
     };
-    private final RecvTransport.Listener recvTransportListener = new RecvTransport.Listener() {
+    private RecvTransport.Listener recvTransportListener = new RecvTransport.Listener() {
 
         private final String listenerTAG = TAG + "_RecvTrans";
 
@@ -191,31 +192,7 @@ public class RoomClient {
             mContext = ctx;
             mRtcClient = rtcClient;
 
-            mMediasoupDevice = new Device();
-            mProducers = new HashMap<>();
-            mConsumers = new HashMap<>();
-            mPeerVideoConsumerMap = new HashMap<>();
-            mPeerAudioConsumerMap = new HashMap<>();
-
-            /**
-             * Initialize the worker handler
-             * */
-            HandlerThread handlerThread = new HandlerThread("worker");
-            handlerThread.start();
-            mWorkHandler = new Handler(handlerThread.getLooper());
-
-            /**
-             * Initialize the main thread handler
-             */
-            mMainHandler = new Handler(Looper.getMainLooper());
-
-            mWorkHandler.post(() -> {
-                mPeerConnectionUtils = new PeerConnectionUtils();
-                /**
-                 * TODO: don't hardcode default values
-                 */
-                PeerConnectionUtils.setPreferCameraFace("front");
-            });
+            reset();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -233,16 +210,66 @@ public class RoomClient {
      * Leave and destroy
      */
     public void leaveRoom() {
+
+        asyncSig("leave", new JSONObject());
+
+        mWorkHandler.post(() -> mRtcClient.unRegister());
+
         if (!mJoined) {
             return;
         }
 
         Logger.d(TAG, "leaveRoom()");
 
-        asyncSig("leave", new JSONObject());
+        mJoined = false;
 
-        mRecvTransport.close();
-        mSendTransport.close();
+        mCamProducer.close();
+        mMicProducer.close();
+
+        mCamProducer = null;
+        mMicProducer = null;
+
+        if (mRecvTransport != null) {
+            mRecvTransport.close();
+        }
+
+        if (mSendTransport != null) {
+            mSendTransport.close();
+        }
+
+//        sendTransportListener = null;
+//        recvTransportListener = null;
+
+        mSendTransport.dispose();
+        mRecvTransport.dispose();
+
+        mSendTransport = null;
+
+        mMicEnabled = false;
+        mCamEnabled = false;
+
+        mLocalAudioTrack.setEnabled(false);
+        mLocalVideoTrack.setEnabled(false);
+
+        mLocalVideoTrack.dispose();
+        mLocalAudioTrack.dispose();
+
+        mLocalVideoTrack = null;
+        mLocalAudioTrack = null;
+
+        mConsumers = null;
+        mProducers = null;
+        mPeerAudioConsumerMap = null;
+        mPeerVideoConsumerMap = null;
+        mLastPollSyncData = null;
+        mListener = null;
+
+        mMediasoupDevice.dispose();
+        mWorkHandler.post(()->mPeerConnectionUtils.dispose());
+
+        mWorkHandler.getLooper().quitSafely();
+        mWorkHandler = null;
+        mMainHandler = null;
     }
 
     /**
@@ -250,11 +277,13 @@ public class RoomClient {
      */
     public void startCamera() {
         Logger.d(TAG, "startCamera()");
-        mWorkHandler.post(() -> {
-            if (mPeerConnectionUtils != null) {
-                mPeerConnectionUtils.startCamCapture();
+        if (mPeerConnectionUtils != null) {
+            if (mWorkHandler != null) {
+                mWorkHandler.post(() -> {
+                    mPeerConnectionUtils.startCamCapture();
+                });
             }
-        });
+        }
     }
 
     /**
@@ -262,7 +291,11 @@ public class RoomClient {
      */
     public void stopCamera() {
         Logger.d(TAG, "stopCamera()");
-        mWorkHandler.post(() -> mPeerConnectionUtils.stopCamCapture());
+        if (mPeerConnectionUtils != null) {
+            if (mWorkHandler != null) {
+                mWorkHandler.post(() -> mPeerConnectionUtils.stopCamCapture());
+            }
+        }
     }
 
     public void switchCamera(CameraVideoCapturer.CameraSwitchHandler handler) {
@@ -315,24 +348,24 @@ public class RoomClient {
                 boolean canSendMic = mMicEnabled;
                 boolean canSendCam = mCamEnabled;
 
-                if (!mMicEnabled) {
+//                if (!mMicEnabled) {
                     canSendMic = mMediasoupDevice.canProduce("audio");
-                }
-                if (!mCamEnabled) {
+//                }
+//                if (!mCamEnabled) {
                     canSendCam = mMediasoupDevice.canProduce("video");
-                }
+//                }
 
                 /**
                  * Create video/audio
                  */
-                if (canSendMic && !mMicEnabled) {
-                    mMicEnabled = true;
+//                if (canSendMic && !mMicEnabled) {
+//                    mMicEnabled = true;
                     mWorkHandler.post(() -> enableMic());
-                }
-                if (canSendCam && !mCamEnabled) {
-                    mCamEnabled = true;
+//                }
+//                if (canSendCam && !mCamEnabled) {
+//                    mCamEnabled = true;
                     mWorkHandler.post(() -> enableCam());
-                }
+//                }
 
                 /**
                  * Automatically (no user interaction) create send and recv transport
@@ -345,7 +378,7 @@ public class RoomClient {
                  * TODO (mohamed): Implement exponential backoff
                  */
                 mJoined = false;
-                joinRoom();
+                mMainHandler.post(() -> joinRoom());
                 return;
             }
 
@@ -365,12 +398,7 @@ public class RoomClient {
             e.printStackTrace();
         }
 
-        mRtcClient.register(data, new ISignalingStrategy.ISignalListener() {
-            @Override
-            public void onResponse(JSONObject response) {
-                mWorkHandler.post(() -> pollAndUpdate(response));
-            }
-        });
+        mRtcClient.register(data, mListener);
     }
 
     /**
@@ -547,7 +575,6 @@ public class RoomClient {
             if (kind.equals("video")) {
                 mMainHandler.post(() -> {
                         SurfaceViewRenderer renderer = mContext.findViewById(R.id.remote_video_renderer);
-                        renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
                         mRemoteVideoTrack = (VideoTrack) consumer.getTrack();
                         mRemoteVideoTrack.addSink(renderer);
                 });
@@ -841,6 +868,44 @@ public class RoomClient {
     //endregion Signaling
 
     //region Utilities
+
+    public void reset() {
+
+        mMediasoupDevice = new Device();
+        mProducers = new HashMap<>();
+        mConsumers = new HashMap<>();
+        mPeerVideoConsumerMap = new HashMap<>();
+        mPeerAudioConsumerMap = new HashMap<>();
+
+        /**
+         * Initialize the worker handler
+         * */
+        HandlerThread handlerThread = new HandlerThread("worker");
+        handlerThread.start();
+        mWorkHandler = new Handler(handlerThread.getLooper());
+
+        /**
+         * Initialize the main thread handler
+         */
+        mMainHandler = new Handler(Looper.getMainLooper());
+
+        mWorkHandler.post(() -> {
+            mPeerConnectionUtils = new PeerConnectionUtils();
+            /**
+             * TODO: don't hardcode default values
+             */
+            PeerConnectionUtils.setPreferCameraFace("front");
+        });
+
+        mListener = new ISignalingStrategy.ISignalListener() {
+            @Override
+            public void onResponse(JSONObject response) {
+                if (mWorkHandler != null) {
+                    mWorkHandler.post(() -> pollAndUpdate(response));
+                }
+            }
+        };
+    }
 
     /**
      * Utility function to create a transport and hook up signaling logic

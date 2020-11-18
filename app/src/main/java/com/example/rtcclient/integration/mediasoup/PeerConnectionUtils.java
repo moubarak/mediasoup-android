@@ -224,7 +224,9 @@ public class PeerConnectionUtils {
         Logger.d(TAG, "stopCamCapture()");
         mThreadChecker.checkIsOnValidThread();
         try {
-            mCamCapture.stopCapture();
+            if (mCamCapture != null) {
+                mCamCapture.stopCapture();
+            }
 
         } catch (InterruptedException e) {
             e.printStackTrace();

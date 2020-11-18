@@ -39,7 +39,7 @@ public class HttpClient implements ISignalingStrategy {
      * Moved the polling logic inside the http client to make changing Signaling protocols easier
      */
     private final ScheduledThreadPoolExecutor mExecutor_ = new ScheduledThreadPoolExecutor(1);
-    private ScheduledFuture<?> mPollingInterval;
+    private static ScheduledFuture<?> mPollingInterval;
     private RequestQueue mRequestQueue;
     /**
      * ISignalListener handles the result of a poll request to mimic other signaling protocols. Also to
@@ -108,6 +108,13 @@ public class HttpClient implements ISignalingStrategy {
         }, 0L, 1, TimeUnit.SECONDS);
     }
 
+    @Override
+    public void unRegister() {
+        if (mPollingInterval != null) {
+            mPollingInterval.cancel(true);
+        }
+    }
+
     /**
      * Send synchronous messages to the server via POST requests
      * @param path the method on the server
@@ -118,7 +125,7 @@ public class HttpClient implements ISignalingStrategy {
     public JSONObject fetch(String path, JSONObject params) {
 
         RequestFuture<JSONObject> future = RequestFuture.newFuture();
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, API.api + path, params, future, future) {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, API.getHost() + path, params, future, future) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 return defaultHeaders();
@@ -190,7 +197,7 @@ public class HttpClient implements ISignalingStrategy {
             }
         };
 
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, API.api + path, params, success, failure) {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, API.getHost() + path, params, success, failure) {
             @Override
             public Map<String, String> getHeaders() {
                 return defaultHeaders();
