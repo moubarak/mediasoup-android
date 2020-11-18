@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Stop the camera geed when the app is backgrounded. Keep audio going
+     * Stop the camera feed when the app is backgrounded. Keep audio going
      */
     @Override
     protected void onStop() {

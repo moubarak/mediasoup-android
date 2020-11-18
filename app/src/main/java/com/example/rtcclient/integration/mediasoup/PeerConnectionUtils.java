@@ -214,21 +214,28 @@ public class PeerConnectionUtils {
 
     public void startCamCapture() {
         Logger.d(TAG, "stopCamCapture()");
-        mThreadChecker.checkIsOnValidThread();
-        if (mCamCapture != null) {
-            mCamCapture.startCapture(640, 480, 30);
+        try {
+            mThreadChecker.checkIsOnValidThread();
+            if (mCamCapture != null) {
+                mCamCapture.startCapture(640, 480, 30);
+            }
+        }  catch (IllegalStateException e) {
+            e.printStackTrace();
         }
     }
 
     public void stopCamCapture() {
         Logger.d(TAG, "stopCamCapture()");
-        mThreadChecker.checkIsOnValidThread();
         try {
+            mThreadChecker.checkIsOnValidThread();
+
             if (mCamCapture != null) {
                 mCamCapture.stopCapture();
             }
 
         } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IllegalStateException e) {
             e.printStackTrace();
         }
     }

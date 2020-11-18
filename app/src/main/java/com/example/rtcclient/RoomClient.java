@@ -277,13 +277,14 @@ public class RoomClient {
      */
     public void startCamera() {
         Logger.d(TAG, "startCamera()");
-        if (mPeerConnectionUtils != null) {
-            if (mWorkHandler != null) {
-                mWorkHandler.post(() -> {
-                    mPeerConnectionUtils.startCamCapture();
-                });
+
+            if (mPeerConnectionUtils != null) {
+                if (mWorkHandler != null) {
+                    mWorkHandler.post(() -> {
+                        mPeerConnectionUtils.startCamCapture();
+                    });
+                }
             }
-        }
     }
 
     /**
@@ -291,11 +292,12 @@ public class RoomClient {
      */
     public void stopCamera() {
         Logger.d(TAG, "stopCamera()");
-        if (mPeerConnectionUtils != null) {
-            if (mWorkHandler != null) {
-                mWorkHandler.post(() -> mPeerConnectionUtils.stopCamCapture());
+
+            if (mPeerConnectionUtils != null) {
+                if (mWorkHandler != null) {
+                    mWorkHandler.post(() -> mPeerConnectionUtils.stopCamCapture());
+                }
             }
-        }
     }
 
     public void switchCamera(CameraVideoCapturer.CameraSwitchHandler handler) {
